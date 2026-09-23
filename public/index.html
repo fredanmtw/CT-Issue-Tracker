@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crossing Thresholds Issue Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDEFF3; --surface:#FFFFFF; --text:#1B2333; --muted:#566178;
+  --line:#D9DDE6; --line-strong:#B4BCCC; --hover:#F4F5F8; --selected:#FFF3C4;
+  --header:#14284B; --strong:#14284B; --on-strong:#FFFFFF; --yellow:#FFC20E; --focus:#1C5DD6; --danger:#B3261E;
+  --s-submitted:#2A5BD7; --s-needs_info:#B85400; --s-with_board:#7B3FA3; --s-in_progress:#0A7A74; --s-resolved:#2B7A3D;
+  --p-urgent:#C62828; --p-high:#E07A00; --p-normal:#8792A8; --p-low:#C3CAD8;
+  --f-display:'Barlow Condensed','Arial Narrow',sans-serif; --f-body:'Public Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;background:var(--paper);color:var(--text);font:400 15px/1.5 var(--f-body)}
+h1,h2,h3{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.muted{color:var(--muted)}
+input,select,textarea{width:100%;background:var(--surface);border:1.5px solid var(--line-strong);border-radius:6px;padding:9px 11px}
+textarea{resize:vertical;min-height:96px}
+label,legend{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+fieldset{border:0;padding:0;margin:0}
+.btn{appearance:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--strong);background:transparent;color:var(--text);font:600 14px/1.2 var(--f-body);padding:9px 14px;border-radius:6px;cursor:pointer}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--strong);color:var(--on-strong)}
+.btn.primary:hover{filter:brightness(1.12)}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.err{color:var(--danger);font-weight:600;min-height:1.2em}
+.note{color:var(--muted);font-size:13px}
+
+/* auth screens */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.auth-card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:30px 28px;border-top:6px solid var(--yellow)}
+.auth-card h1{font:600 30px/1.1 var(--f-display);margin-bottom:6px}
+.auth-card p.lede{color:var(--muted);margin:0 0 20px}
+.auth-card .field{margin-bottom:14px}
+.auth-card .actions{margin-top:18px}
+.switch{margin-top:16px;font-size:14px;text-align:center}
+.switch button{background:none;border:0;color:var(--focus);font-weight:600;cursor:pointer;padding:0}
+
+/* header/tabs */
+.bar{background:var(--header);border-bottom:6px solid var(--yellow);color:#fff}
+.bar-in{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap}
+.brand h1{font:600 26px/1 var(--f-display)}
+.who{display:flex;align-items:center;gap:10px;font-size:14px}
+.rolechip{background:var(--yellow);color:#14284B;font:600 15px/1 var(--f-display);padding:5px 11px;border-radius:999px}
+.tabs{background:var(--surface);border-bottom:1px solid var(--line)}
+.tabs-in{max-width:1200px;margin:0 auto;padding:0 12px;display:flex;gap:6px;overflow-x:auto}
+.tab{appearance:none;background:none;border:0;border-bottom:4px solid transparent;padding:14px 12px 10px;font:600 19px/1 var(--f-display);color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--yellow)}
+#banner:empty{display:none}
+.banner-wrap{padding:0 20px}
+.banner{max-width:1200px;margin:16px auto 0;padding:12px 16px;background:var(--surface);border:1px solid var(--line-strong);border-left:6px solid var(--yellow);border-radius:8px}
+.wrap{max-width:1200px;margin:0 auto;padding:22px 20px 64px}
+.narrow{max-width:780px}
+.page-h{font:600 30px/1.1 var(--f-display);margin-bottom:4px}
+.lede{margin:0 0 18px;color:var(--muted);max-width:62ch}
+
+/* report form */
+.form{display:grid;grid-template-columns:1fr 1fr;gap:18px 20px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px}
+.field.wide{grid-column:1/-1}
+.prio{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.pchoice{display:grid;grid-template-columns:auto 1fr;column-gap:10px;border:1.5px solid var(--line-strong);border-top:5px solid var(--pc);border-radius:8px;padding:10px 12px;cursor:pointer;margin:0}
+.pchoice input{grid-row:1/3;margin-top:4px}
+.pchoice .pt{font-weight:600}
+.pchoice .ph{font-size:13px;color:var(--muted)}
+.pchoice:has(input:checked){border-color:var(--strong);background:var(--selected)}
+.form .actions{grid-column:1/-1}
+
+/* list + detail */
+.toolbar{display:grid;grid-template-columns:1fr minmax(160px,240px);gap:12px;align-items:end;margin-bottom:6px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px}
+.fchip{appearance:none;white-space:nowrap;border:1.5px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:6px 13px;font:500 14px/1.2 var(--f-body);cursor:pointer}
+.fchip[aria-pressed="true"]{background:var(--strong);border-color:var(--strong);color:var(--on-strong)}
+.split{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:24px;align-items:start;margin-top:12px}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.row{--pc:var(--p-normal);width:100%;display:grid;grid-template-columns:6px minmax(0,1fr) auto;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:0;cursor:pointer;color:inherit}
+.row:hover{background:var(--hover)}
+.row[aria-current="true"]{background:var(--selected)}
+.p-urgent{--pc:var(--p-urgent)} .p-high{--pc:var(--p-high)} .p-normal{--pc:var(--p-normal)} .p-low{--pc:var(--p-low)}
+.pbar{background:var(--pc)}
+.row-main{padding:12px 12px 12px 14px;min-width:0}
+.row-top{display:flex;gap:8px;align-items:baseline}
+.tno{font:600 16px/1 var(--f-display);color:var(--muted)}
+.row-title{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-meta{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:13px;color:var(--muted);margin-top:3px}
+.row-side{padding:12px 14px 12px 0;display:flex}
+.chip{--c:var(--muted);display:inline-flex;align-items:center;gap:6px;font:600 13px/1 var(--f-body);color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);padding:6px 10px;border-radius:999px;white-space:nowrap}
+.chip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.s-submitted{--c:var(--s-submitted)} .s-needs_info{--c:var(--s-needs_info)} .s-with_board{--c:var(--s-with_board)} .s-in_progress{--c:var(--s-in_progress)} .s-resolved{--c:var(--s-resolved)}
+.empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.empty h3{font:600 22px/1.1 var(--f-display);color:var(--text);margin-bottom:6px}
+.detail-pane{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px 24px;position:sticky;top:12px}
+.back{display:none;margin-bottom:12px}
+.d-top{display:flex;align-items:center;gap:10px}
+.d-top .tno{font-size:20px}
+h3.d-title{font:600 26px/1.15 var(--f-display);margin:8px 0 2px}
+.facts{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:18px 0;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px}
+.facts dt{color:var(--muted)} .facts dd{margin:0;font-weight:500}
+.pfl{font-weight:700;color:var(--pc)}
+.desc{white-space:pre-wrap;overflow-wrap:anywhere;max-width:70ch}
+.sec-h{font:600 20px/1.1 var(--f-display);margin:24px 0 10px}
+.act-panel{border:1.5px solid var(--line-strong);border-radius:8px;padding:14px;display:grid;gap:12px}
+.act-panel .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.act-btns{display:flex;flex-wrap:wrap;gap:8px}
+.tl{list-style:none;margin:0;padding:0 0 0 18px;border-left:3px solid var(--line-strong)}
+.tl li{position:relative;padding:0 0 16px 14px}
+.tl li::before{content:"";position:absolute;left:-22px;top:5px;width:11px;height:11px;border-radius:50%;background:var(--surface);border:3px solid var(--strong)}
+.tl time{display:block;font-size:12.5px;color:var(--muted)}
+.tl .noteline{margin:4px 0 0;white-space:pre-wrap;background:var(--hover);border-radius:6px;padding:8px 10px;font-size:14px}
+
+/* people/admin */
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:24px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
+.panel h3{font:600 22px/1.1 var(--f-display);margin-bottom:4px}
+.plain{list-style:none;margin:0 0 14px;padding:0}
+.plain li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px 8px 0;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:13px}
+.newuser{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.newuser .wide{grid-column:1/-1}
+
+.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--strong);color:var(--on-strong);padding:11px 16px;border-radius:8px;font-weight:600;font-size:14px;max-width:min(92vw,520px);transition:opacity .18s,transform .18s;z-index:20}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:var(--danger)}
+
+@media (max-width:900px){
+  .split{grid-template-columns:1fr}
+  .split:not(.has-sel) .detail-pane{display:none}
+  .split.has-sel .list-pane{display:none}
+  .back{display:inline-flex}
+  .toolbar{grid-template-columns:1fr}
+}
+@media (max-width:620px){
+  .form,.newuser{grid-template-columns:1fr}
+  .wrap{padding:18px 14px 56px}
+  .act-panel .row2{grid-template-columns:1fr}
+  .facts{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="auth" class="auth-wrap"></div>
+
+<div id="app" hidden>
+  <header class="bar"><div class="bar-in">
+    <div class="brand"><h1>Crossing Thresholds</h1></div>
+    <div class="who" id="who"></div>
+  </div></header>
+  <nav class="tabs" aria-label="Sections"><div class="tabs-in" id="tabs"></div></nav>
+  <div class="banner-wrap"><div id="banner" class="banner" hidden></div></div>
+
+  <main>
+    <section id="v-report" class="wrap narrow" hidden>
+      <h2 class="page-h">Report an issue</h2>
+      <p class="lede">Your report goes straight to the tech director.</p>
+      <div class="form">
+        <div class="field"><label for="f-school">School</label><select id="f-school"></select></div>
+        <div class="field"><label for="f-cat">Type of problem</label><select id="f-cat"></select></div>
+        <div class="field wide"><label for="f-title">Short summary</label><input id="f-title" maxlength="120" placeholder="Example: Room 114 projector won't turn on"></div>
+        <div class="field wide"><label for="f-desc">What is happening</label><textarea id="f-desc" rows="5" maxlength="4000" placeholder="What did you see, what have you already tried, and who is affected?"></textarea></div>
+        <div class="field wide"><label for="f-room">Room or location (optional)</label><input id="f-room" maxlength="80"></div>
+        <fieldset class="field wide"><legend>How urgent is it?</legend><div class="prio" id="f-prio"></div></fieldset>
+        <div class="err" id="f-err" role="alert"></div>
+        <div class="actions"><button type="button" class="btn primary" id="f-submit">Send to tech director</button></div>
+      </div>
+    </section>
+
+    <section id="v-list" class="wrap" hidden>
+      <div class="toolbar">
+        <div><h2 class="page-h" id="list-title"></h2><p class="lede" id="list-sub"></p></div>
+        <div><label class="sr" for="q">Search issues</label><input id="q" type="search" placeholder="Search summary, school, room or ticket number"></div>
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
+      <div class="split" id="split">
+        <div class="list-pane"><div id="list"></div></div>
+        <div class="detail-pane" id="detail"></div>
+      </div>
+    </section>
+
+    <section id="v-people" class="wrap" hidden>
+      <h2 class="page-h">People and schools</h2>
+      <p class="lede">Create accounts for staff, the director and board members, and manage the school list.</p>
+      <div class="grid2">
+        <div class="panel">
+          <h3>Schools</h3>
+          <div id="school-list"></div>
+          <div class="inline"><input id="new-school" maxlength="60" placeholder="School name" style="flex:1"><button type="button" class="btn primary" id="add-school">Add</button></div>
+        </div>
+        <div class="panel">
+          <h3>Accounts</h3>
+          <div id="people-table"></div>
+          <div class="newuser">
+            <div class="wide"><label for="nu-name">Name</label><input id="nu-name" maxlength="80"></div>
+            <div><label for="nu-email">Email</label><input id="nu-email" type="email"></div>
+            <div><label for="nu-pass">Temporary password</label><input id="nu-pass" type="text" placeholder="At least 8 characters"></div>
+            <div><label for="nu-role">Role</label><select id="nu-role"><option value="staff">Tech staff</option><option value="director">Tech director</option><option value="board">Board member</option></select></div>
+            <div id="nu-school-wrap"><label for="nu-school">School</label><select id="nu-school"></select></div>
+            <div class="wide err" id="nu-err" role="alert"></div>
+            <div class="wide"><button type="button" class="btn primary" id="nu-submit">Create account</button></div>
+            <p class="note wide">Share the temporary password with them yourself — there is no automatic email.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+var STATUS = {
+  submitted:{label:'Awaiting director',stop:1}, needs_info:{label:'Needs info',stop:0},
+  with_board:{label:'With board',stop:2}, in_progress:{label:'Board working',stop:2}, resolved:{label:'Resolved',stop:3}
+};
+var PRI = {
+  urgent:{label:'Urgent',w:0,hint:'Many people are blocked, or it is a safety or security risk'},
+  high:{label:'High',w:1,hint:'A class or a staff member cannot work'},
+  normal:{label:'Normal',w:2,hint:'Needs fixing within a few days'},
+  low:{label:'Low',w:3,hint:'Can wait for a scheduled visit'}
+};
+var CATS = ['Computers and devices','Network and Wi-Fi','Accounts and passwords','Software and licenses','Printers and copiers','Projectors and AV','Security or safety','Other'];
+var ROLE_LABEL = {staff:'Tech staff', director:'Tech director', board:'Board member', admin:'Admin'};
+var STOPS = ['Reported','Director','Board','Resolved'];
+var ALLOWED = {escalated:['submitted','needs_info'],info_requested:['submitted'],info_provided:['needs_info'],taken:['with_board','in_progress'],returned:['with_board','in_progress'],resolved:['submitted','needs_info','with_board','in_progress'],reopened:['resolved'],priority:['submitted','needs_info','with_board','in_progress']};
+var NOTE_REQ = ['info_requested','info_provided','returned','resolved','reopened','commented'];
+var DONE_MSG = {escalated:'Escalated to the board',info_requested:'Sent back to the reporter for more information',info_provided:'Reply sent to the tech director',taken:'You took this on',returned:'Returned to the tech director',resolved:'Marked resolved',reopened:'Reopened and sent to the tech director',commented:'Comment added',priority:'Priority updated'};
+var TAB_INFO = {
+  report:{label:'Report an issue'},
+  mine:{label:'My reports',title:'My reports',sub:'Issues you have reported and where each one stands.'},
+  triage:{label:'Triage',title:'Triage',sub:'New reports waiting for review. Urgent items come first.'},
+  board:{label:'Board queue',title:'Board queue',sub:'Issues the tech director has escalated for board action.'},
+  all:{label:'All issues',title:'All issues',sub:'Every issue across all schools.'},
+  people:{label:'People and schools'}
+};
+var CHIPS = {
+  mine:[['open','Open'],['needs_info','Needs your reply'],['resolved','Resolved'],['all','Everything']],
+  all:[['open','Open'],['submitted','Awaiting director'],['needs_info','Needs info'],['with_board','With board'],['in_progress','Board working'],['resolved','Resolved'],['all','Everything']],
+  board:[['all','All'],['with_board','Awaiting board'],['in_progress','Board working'],['mine','Assigned to me']]
+};
+
+var S = {user:null, issues:[], users:[], schools:[], tab:null, sel:{}, chip:{}, draft:{}, assignee:'', q:'', busy:false, poll:null};
+
+function $(s,r){ return (r||document).querySelector(s); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function setHTML(el,html){ if(el._h===html) return false; el._h=html; el.innerHTML=html; return true; }
+function tno(id){ return '#'+String(id).replace(/-/g,'').slice(-5).toUpperCase(); }
+function nameOf(id){ if(!id) return ''; if(S.user && id===S.user.id) return S.user.name+' (you)'; var u=S.users.find(function(x){return x.id===id;}); return u?u.name:'Someone'; }
+function fmtDate(t){ if(!t) return ''; return new Date(t).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+function ago(t){ if(!t) return ''; var m=Math.floor((Date.now()-t)/60000); if(m<1) return 'just now'; if(m<60) return m+' min ago'; var h=Math.floor(m/60); if(h<24) return h+' h ago'; var d=Math.floor(h/24); if(d<30) return d+' d ago'; return new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
+var tt;
+function toast(msg,isErr){ var t=$('#toast'); t.textContent=msg; t.className='toast show'+(isErr?' err':''); clearTimeout(tt); tt=setTimeout(function(){t.className='toast';},4200); }
+
+async function api(method, url, body){
+  var res = await fetch(url, {method:method, headers:body?{'Content-Type':'application/json'}:undefined, body:body?JSON.stringify(body):undefined, credentials:'same-origin'});
+  var data = null;
+  try{ data = await res.json(); }catch(e){}
+  if(!res.ok){ var e = new Error((data&&data.message)||'Something went wrong.'); e.code=data&&data.error; e.status=res.status; throw e; }
+  return data;
+}
+
+/* ---------------- auth screens ---------------- */
+function authShell(title, lede, bodyHtml, switchHtml){
+  return '<div class="auth-card"><h1>'+esc(title)+'</h1><p class="lede">'+esc(lede)+'</p>'+bodyHtml+(switchHtml||'')+'</div>';
+}
+function renderSetup(){
+  setHTML($('#auth'), authShell('Set up Crossing Thresholds','Create the first account. It will be the admin account, which manages everyone else.',
+    '<div class="field"><label for="s-name">Your name</label><input id="s-name" autocomplete="name"></div>'+
+    '<div class="field"><label for="s-email">Email</label><input id="s-email" type="email" autocomplete="username"></div>'+
+    '<div class="field"><label for="s-pass">Password</label><input id="s-pass" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div>'+
+    '<div class="err" id="s-err" role="alert"></div>'+
+    '<div class="actions"><button type="button" class="btn primary" id="s-submit" style="width:100%">Create admin account</button></div>'));
+  $('#s-submit').onclick = async function(){
+    var name=$('#s-name').value.trim(), email=$('#s-email').value.trim(), pass=$('#s-pass').value;
+    var err=$('#s-err'); err.textContent='';
+    if(!name){ err.textContent='Enter your name.'; return; }
+    if(!email){ err.textContent='Enter your email.'; return; }
+    if(!pass || pass.length<8){ err.textContent='Password must be at least 8 characters.'; return; }
+    this.disabled=true;
+    try{ var d=await api('POST','/api/setup',{name:name,email:email,password:pass}); onSignedIn(d.user); }
+    catch(e){ err.textContent=e.message; this.disabled=false; }
+  };
+}
+function renderLogin(){
+  setHTML($('#auth'), authShell('Sign in','Use the email and password your admin gave you.',
+    '<div class="field"><label for="l-email">Email</label><input id="l-email" type="email" autocomplete="username"></div>'+
+    '<div class="field"><label for="l-pass">Password</label><input id="l-pass" type="password" autocomplete="current-password"></div>'+
+    '<div class="err" id="l-err" role="alert"></div>'+
+    '<div class="actions"><button type="button" class="btn primary" id="l-submit" style="width:100%">Sign in</button></div>'+
+    '<p class="note" style="margin-top:14px">Forgot your password? Ask your admin to reset it.</p>'));
+  $('#l-submit').onclick = doLogin;
+  $('#l-pass').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+}
+async function doLogin(){
+  var email=$('#l-email').value.trim(), pass=$('#l-pass').value, err=$('#l-err'), btn=$('#l-submit');
+  err.textContent=''; btn.disabled=true;
+  try{ var d=await api('POST','/api/login',{email:email,password:pass}); onSignedIn(d.user); }
+  catch(e){ err.textContent=e.message; btn.disabled=false; }
+}
+async function onSignedIn(user){
+  S.user = user;
+  $('#auth').hidden = true; $('#app').hidden = false;
+  await Promise.all([loadSchools(), loadUsers().catch(function(){}), loadIssues()]);
+  S.tab = tabsFor()[0];
+  render();
+  clearInterval(S.poll);
+  S.poll = setInterval(function(){ loadIssues().then(render).catch(function(){}); }, 15000);
+}
+async function checkSession(){
+  try{
+    var b = await api('GET','/api/bootstrap');
+    if(b.needsSetup){ renderSetup(); return; }
+    var me = await api('GET','/api/me');
+    onSignedIn(me.user);
+  }catch(e){ renderLogin(); }
+}
+
+/* ---------------- data loading ---------------- */
+async function loadIssues(){ var d=await api('GET','/api/issues'); S.issues=d.issues; }
+async function loadSchools(){ var d=await api('GET','/api/schools'); S.schools=d.schools; }
+async function loadUsers(){ var d=await api('GET','/api/users'); S.users=d.users; }
+
+/* ---------------- role/tabs ---------------- */
+function role(){ return S.user.role; }
+function isDir(){ var r=role(); return r==='director'||r==='admin'; }
+function allSchools(){ return S.schools; }
+function tabsFor(){
+  var r=role(), t=[];
+  if(r==='staff') t.push('report','mine');
+  if(r==='director'||r==='admin') t.push('triage','all','report');
+  if(r==='board') t.push('board','all');
+  if(r==='admin') t.push('people');
+  return t;
+}
+
+/* ---------------- filtering ---------------- */
+function baseFor(tab){
+  var me=S.user.id;
+  if(tab==='mine') return S.issues.filter(function(i){return i.reporterId===me;});
+  if(tab==='triage') return S.issues.filter(function(i){return i.status==='submitted';});
+  if(tab==='board') return S.issues.filter(function(i){return i.status==='with_board'||i.status==='in_progress';});
+  return S.issues;
+}
+function passQ(i){
+  if(!S.q) return true;
+  var q=S.q.toLowerCase();
+  return [i.title,i.description,i.school,i.room,i.category,tno(i.id)].join(' ').toLowerCase().indexOf(q)>=0;
+}
+function matchChip(i,key){
+  if(key==='all') return true;
+  if(key==='open') return i.status!=='resolved';
+  if(key==='mine') return i.assigneeId===S.user.id && i.status==='in_progress';
+  return i.status===key;
+}
+function chipKey(tab){ return S.chip[tab] || (CHIPS[tab]?CHIPS[tab][0][0]:'all'); }
+function filtered(tab){
+  var key = CHIPS[tab]?chipKey(tab):'all';
+  var list = baseFor(tab).filter(passQ).filter(function(i){return matchChip(i,key);});
+  var queue = (tab==='triage'||tab==='board');
+  list.sort(function(a,b){
+    if(queue){ var pa=(PRI[a.priority]||PRI.normal).w, pb=(PRI[b.priority]||PRI.normal).w; if(pa!==pb) return pa-pb; return a.createdAt-b.createdAt; }
+    return b.updatedAt-a.updatedAt;
+  });
+  return list;
+}
+
+/* ---------------- render ---------------- */
+function render(){
+  var tabs = tabsFor();
+  if(tabs.indexOf(S.tab)<0) S.tab = tabs[0];
+  drawChrome(tabs);
+  ['v-report','v-list','v-people'].forEach(function(v){ $('#'+v).hidden = true; });
+  if(S.tab==='report'){ $('#v-report').hidden=false; drawReport(); }
+  else if(S.tab==='people'){ $('#v-people').hidden=false; drawPeople(); }
+  else { $('#v-list').hidden=false; drawList(); }
+}
+function drawChrome(tabs){
+  setHTML($('#who'), '<span>'+esc(S.user.name)+'</span><span class="rolechip">'+ROLE_LABEL[role()]+'</span><button type="button" class="btn sm" id="logout-btn" style="border-color:#fff;color:#fff">Sign out</button>');
+  var lb = $('#logout-btn'); if(lb) lb.onclick = doLogout;
+  setHTML($('#tabs'), tabs.map(function(t){
+    var n=0;
+    if(t==='triage') n=S.issues.filter(function(i){return i.status==='submitted';}).length;
+    if(t==='board') n=S.issues.filter(function(i){return i.status==='with_board';}).length;
+    if(t==='mine') n=S.issues.filter(function(i){return i.reporterId===S.user.id && i.status==='needs_info';}).length;
+    return '<button type="button" class="tab" data-tab="'+t+'" aria-selected="'+(t===S.tab)+'">'+TAB_INFO[t].label+(n?' ('+n+')':'')+'</button>';
+  }).join(''));
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function(b){ b.onclick=function(){ S.tab=b.dataset.tab; window.scrollTo(0,0); render(); }; });
+  var banner = $('#banner');
+  if(!S.schools.length && role()==='admin' && S.tab!=='people'){
+    banner.hidden=false; setHTML(banner,'Setup: add your schools and create accounts in People and schools. <button type="button" class="btn sm" id="goto-people">Open setup</button>');
+    var gp=$('#goto-people'); if(gp) gp.onclick=function(){ S.tab='people'; render(); };
+  } else { banner.hidden=true; }
+}
+async function doLogout(){ try{ await api('POST','/api/logout'); }catch(e){} clearInterval(S.poll); location.reload(); }
+
+/* ---------------- report form ---------------- */
+var reportBuilt=false;
+function drawReport(){
+  if(!reportBuilt){
+    $('#f-cat').innerHTML = CATS.map(function(c){return '<option>'+esc(c)+'</option>';}).join('');
+    $('#f-prio').innerHTML = ['low','normal','high','urgent'].map(function(k){
+      return '<label class="pchoice p-'+k+'"><input type="radio" name="prio" value="'+k+'"'+(k==='normal'?' checked':'')+'><span class="pt">'+PRI[k].label+'</span><span class="ph">'+esc(PRI[k].hint)+'</span></label>';
+    }).join('');
+    $('#f-submit').onclick = submitReport;
+    reportBuilt = true;
+  }
+  var opts = allSchools().map(function(s){return '<option>'+esc(s)+'</option>';}).join('');
+  var sel = $('#f-school'); if(sel._h!==opts){ sel._h=opts; sel.innerHTML=opts; }
+}
+async function submitReport(){
+  if(S.busy) return;
+  var err=$('#f-err'); err.textContent='';
+  var school=$('#f-school').value, title=$('#f-title').value.trim(), desc=$('#f-desc').value.trim();
+  if(!school){ err.textContent='Choose the school this issue is at.'; return; }
+  if(!title){ err.textContent='Add a short summary.'; return; }
+  if(!desc){ err.textContent='Describe what is happening.'; return; }
+  var pr=(document.querySelector('input[name="prio"]:checked')||{}).value||'normal';
+  S.busy=true; $('#f-submit').disabled=true;
+  try{
+    await api('POST','/api/issues',{title:title,description:desc,school:school,category:$('#f-cat').value,room:$('#f-room').value.trim(),priority:pr});
+    $('#f-title').value=''; $('#f-desc').value=''; $('#f-room').value='';
+    var r=document.querySelector('input[name="prio"][value="normal"]'); if(r) r.checked=true;
+    await loadIssues();
+    S.tab = tabsFor().indexOf('mine')>=0?'mine':'all';
+    S.chip[S.tab]='open';
+    toast('Sent to the tech director');
+    window.scrollTo(0,0); render();
+  }catch(e){ err.textContent=e.message; }
+  finally{ S.busy=false; $('#f-submit').disabled=false; }
+}
+
+/* ---------------- list + detail ---------------- */
+function emptyList(tab){
+  if(baseFor(tab).length) return '<div class="empty"><h3>No issues match</h3><p>Try a different status or search.</p></div>';
+  var m = {triage:['Nothing waiting for review','New reports will appear here.'],board:['Nothing needs the board right now','Escalated issues will appear here.'],mine:['You have not reported anything yet','Use Report an issue when something needs fixing.'],all:['No issues yet','Reports from every school will collect here.']}[tab];
+  return '<div class="empty"><h3>'+m[0]+'</h3><p>'+m[1]+'</p></div>';
+}
+function rowHTML(i){
+  var st=STATUS[i.status]||STATUS.submitted, p=PRI[i.priority]||PRI.normal, sel=S.sel[S.tab]===i.id;
+  var work=(i.status==='in_progress'&&i.assigneeId)?'<span>'+esc(nameOf(i.assigneeId))+' is on it</span>':'';
+  return '<button type="button" class="row p-'+esc(i.priority)+'" data-row="'+esc(i.id)+'"'+(sel?' aria-current="true"':'')+'>'+
+    '<span class="pbar" aria-hidden="true"></span>'+
+    '<span class="row-main"><span class="row-top"><span class="tno">'+tno(i.id)+'</span><span class="row-title">'+esc(i.title)+'</span></span>'+
+    '<span class="row-meta"><span>'+p.label+'</span><span>'+esc(i.school)+'</span><span>'+ago(i.updatedAt||i.createdAt)+'</span>'+work+'</span></span>'+
+    '<span class="row-side"><span class="chip s-'+esc(i.status)+'">'+st.label+'</span></span></button>';
+}
+function drawList(){
+  var tab=S.tab, info=TAB_INFO[tab];
+  $('#list-title').textContent=info.title; $('#list-sub').textContent=info.sub;
+  var chipsEl=$('#chips');
+  if(CHIPS[tab]){
+    var key=chipKey(tab), pool=baseFor(tab).filter(passQ);
+    setHTML(chipsEl, CHIPS[tab].map(function(c){
+      var n=pool.filter(function(i){return matchChip(i,c[0]);}).length;
+      return '<button type="button" class="fchip" data-chip="'+c[0]+'" aria-pressed="'+(c[0]===key)+'">'+c[1]+' ('+n+')</button>';
+    }).join(''));
+    Array.prototype.forEach.call(chipsEl.querySelectorAll('[data-chip]'),function(b){ b.onclick=function(){ S.chip[tab]=b.dataset.chip; render(); }; });
+    chipsEl.hidden=false;
+  } else { chipsEl.hidden=true; }
+  var items=filtered(tab);
+  setHTML($('#list'), items.length ? '<div class="list">'+items.map(rowHTML).join('')+'</div>' : emptyList(tab));
+  Array.prototype.forEach.call(document.querySelectorAll('[data-row]'), function(b){ b.onclick=function(){ S.sel[tab]=b.dataset.row; S.assignee=''; render(); if(window.matchMedia('(max-width:900px)').matches) window.scrollTo(0,0); }; });
+  var sel=S.issues.find(function(i){return i.id===S.sel[tab];});
+  $('#split').classList.toggle('has-sel', !!sel);
+  var d=$('#detail');
+  if(!sel){ setHTML(d,'<div class="empty"><h3>Select an issue</h3><p>Its route, history and available actions appear here.</p></div>'); return; }
+  if(setHTML(d, detailHTML(sel))){
+    var back=$('#back'); if(back) back.onclick=function(){ S.sel[tab]=null; render(); };
+    var note=$('#note'); if(note){ note.value=S.draft[sel.id]||''; note.oninput=function(){ S.draft[sel.id]=note.value; }; }
+    var as=$('#assignee'); if(as) as.onchange=function(){ S.assignee=as.value; };
+    var pr=$('#prio-sel'); if(pr) pr.onchange=function(){ changePriority(sel.id, pr.value); };
+    Array.prototype.forEach.call(d.querySelectorAll('[data-act]'), function(b){ b.onclick=function(){ issueAct(sel.id, b.dataset.act, b); }; });
+  }
+}
+function evText(e){
+  switch(e.type){
+    case 'submitted': return 'reported this issue';
+    case 'commented': return 'commented';
+    case 'priority': return 'changed priority to '+esc((PRI[e.to]||{}).label||e.to);
+    case 'escalated': return e.assignee?('escalated this to the board and assigned '+esc(nameOf(e.assignee))):'escalated this to the board';
+    case 'info_requested': return 'asked the reporter for more information';
+    case 'info_provided': return 'replied with more information';
+    case 'taken': return 'took this on';
+    case 'returned': return 'returned this to the tech director';
+    case 'resolved': return 'marked this resolved';
+    case 'reopened': return 'reopened this issue';
+    default: return esc(e.type);
+  }
+}
+function actionsHTML(i){
+  var r=role(), me=S.user.id, s=i.status, dir=isDir(), board=(r==='board'), rep=(i.reporterId===me), btns=[], top='';
+  if(dir && s!=='resolved') top += '<div><label for="prio-sel">Priority</label><select id="prio-sel">'+['urgent','high','normal','low'].map(function(k){return '<option value="'+k+'"'+(k===i.priority?' selected':'')+'>'+PRI[k].label+'</option>';}).join('')+'</select></div>';
+  if(dir && (s==='submitted'||s==='needs_info')){
+    var boards=S.users.filter(function(u){return u.role==='board';});
+    top += '<div><label for="assignee">Assign to a board member</label><select id="assignee"><option value="">Any board member</option>'+boards.map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>';}).join('')+'</select></div>';
+    btns.push(['escalated','Escalate to board','primary']);
+  }
+  if(dir && s==='submitted') btns.push(['info_requested','Ask reporter for info','']);
+  if(board && (s==='with_board'||(s==='in_progress'&&i.assigneeId!==me))) btns.push(['taken', s==='with_board'?'Take this on':'Take over','primary']);
+  if(board && (s==='with_board'||s==='in_progress')){
+    btns.push(['resolved','Mark resolved', (s==='in_progress'&&i.assigneeId===me)?'primary':'']);
+    btns.push(['returned','Return to director','']);
+  } else if(dir && s!=='resolved'){ btns.push(['resolved','Mark resolved','']); }
+  if(rep && s==='needs_info') btns.push(['info_provided','Send reply','primary']);
+  if(s==='resolved' && (rep||dir)) btns.push(['reopened','Reopen','']);
+  btns.push(['commented','Post comment','']);
+  var html='<div class="act-panel">';
+  if(top) html+='<div class="row2">'+top+'</div>';
+  html+='<div><label for="note">Note</label><textarea id="note" rows="3" placeholder="Add details for the next person. Required for most actions."></textarea></div>';
+  html+='<div class="act-btns">'+btns.map(function(b){return '<button type="button" class="btn '+b[2]+'" data-act="'+b[0]+'">'+b[1]+'</button>';}).join('')+'</div>';
+  return html+'</div>';
+}
+function detailHTML(i){
+  var st=STATUS[i.status]||STATUS.submitted, p=PRI[i.priority]||PRI.normal, cur=st.stop;
+  var route='<div style="display:flex;margin:22px 0 10px">'+STOPS.map(function(lab,idx){
+    var on = idx<=cur;
+    return '<div style="flex:1;text-align:center;font-size:12.5px;color:'+(on?'var(--text)':'var(--muted)')+(idx===cur?';font-weight:700':'')+'">'+esc(idx===cur?st.label:lab)+'</div>';
+  }).join('')+'</div>';
+  var facts=[['School',esc(i.school)],['Type',esc(i.category)], i.room?['Room',esc(i.room)]:null,
+    ['Priority','<span class="pfl p-'+esc(i.priority)+'">'+p.label+'</span>'],
+    ['Reported by',esc(nameOf(i.reporterId))],['Reported',esc(fmtDate(i.createdAt))],
+    i.assigneeId?['Board member',esc(nameOf(i.assigneeId))]:null,
+    i.status==='resolved'&&i.resolvedAt?['Resolved',esc(fmtDate(i.resolvedAt))+(i.resolvedBy?' by '+esc(nameOf(i.resolvedBy)):'')]:null
+  ].filter(Boolean).map(function(f){return '<dt>'+f[0]+'</dt><dd>'+f[1]+'</dd>';}).join('');
+  var tl=(i.history||[]).map(function(e){ return '<li>'+esc(nameOf(e.by))+' '+evText(e)+'<time>'+esc(fmtDate(e.at))+'</time>'+(e.note?'<p class="noteline">'+esc(e.note)+'</p>':'')+'</li>'; }).join('');
+  return '<button type="button" class="btn sm back" id="back">Back to list</button>'+
+    '<div class="d-top"><span class="tno">'+tno(i.id)+'</span><span class="chip s-'+esc(i.status)+'">'+st.label+'</span></div>'+
+    '<h3 class="d-title">'+esc(i.title)+'</h3>'+route+
+    '<dl class="facts">'+facts+'</dl><div class="desc">'+esc(i.description)+'</div>'+
+    '<h4 class="sec-h">Next step</h4>'+actionsHTML(i)+
+    '<h4 class="sec-h">History</h4><ol class="tl">'+tl+'</ol>';
+}
+
+/* ---------------- actions ---------------- */
+async function issueAct(id, type, btn){
+  if(S.busy) return;
+  var note=($('#note')||{}).value||''; note=note.trim();
+  if(NOTE_REQ.indexOf(type)>=0 && !note){ toast('Write a note first. The next person will see it.', true); return; }
+  S.busy=true; if(btn) btn.disabled=true;
+  try{
+    var assignee = type==='escalated' ? (($('#assignee')||{}).value||'') : '';
+    await api('PATCH','/api/issues/'+id, {type:type, note:note, assigneeId:assignee||undefined});
+    S.draft[id]='';
+    await loadIssues();
+    toast(DONE_MSG[type]);
+    render();
+  }catch(e){ toast(e.message, true); }
+  finally{ S.busy=false; }
+}
+async function changePriority(id, val){
+  if(S.busy) return;
+  S.busy=true;
+  try{ await api('PATCH','/api/issues/'+id,{type:'priority', to:val, note:'Priority changed.'}); await loadIssues(); toast('Priority updated'); render(); }
+  catch(e){ toast(e.message, true); await loadIssues(); render(); }
+  finally{ S.busy=false; }
+}
+
+/* ---------------- people/admin ---------------- */
+function drawPeople(){
+  var sl = S.schools.length
+    ? '<ul class="plain">'+S.schools.map(function(s){return '<li><span>'+esc(s)+'</span><button type="button" class="btn sm" data-rm-school="'+esc(s)+'">Remove</button></li>';}).join('')+'</ul>'
+    : '<p class="muted">No schools yet.</p>';
+  setHTML($('#school-list'), sl);
+  Array.prototype.forEach.call(document.querySelectorAll('[data-rm-school]'), function(b){ b.onclick=async function(){ try{ var d=await api('DELETE','/api/schools/'+encodeURIComponent(b.dataset.rmSchool)); S.schools=d.schools; toast('School removed'); render(); }catch(e){ toast(e.message,true); } }; });
+
+  var rows = S.users.map(function(u){
+    return '<tr><td>'+esc(u.name)+(u.id===S.user.id?' (you)':'')+'</td><td>'+esc(u.email)+'</td><td>'+esc(u.school||'')+'</td><td>'+
+      '<select data-role-for="'+esc(u.id)+'"'+(u.id===S.user.id?' disabled':'')+'>'+
+      ['staff','director','board','admin'].filter(function(r){return r!=='admin'||u.role==='admin';}).map(function(r){return '<option value="'+r+'"'+(r===u.role?' selected':'')+'>'+ROLE_LABEL[r]+'</option>';}).join('')+
+      '</select></td><td><button type="button" class="btn sm" data-reset="'+esc(u.id)+'">Reset password</button></td></tr>';
+  }).join('');
+  setHTML($('#people-table'), '<table><thead><tr><th>Name</th><th>Email</th><th>School</th><th>Role</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>');
+  Array.prototype.forEach.call(document.querySelectorAll('[data-role-for]'), function(sel){ sel.onchange=async function(){ try{ var d=await api('PATCH','/api/users/'+sel.dataset.roleFor,{role:sel.value}); if(d.note) toast(d.note); else toast('Role updated'); await loadUsers(); render(); }catch(e){ toast(e.message,true); await loadUsers(); render(); } }; });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-reset]'), function(b){ b.onclick=async function(){ var p=prompt('New temporary password (at least 8 characters):'); if(!p) return; try{ await api('PATCH','/api/users/'+b.dataset.reset,{newPassword:p}); toast('Password reset'); }catch(e){ toast(e.message,true); } }; });
+
+  var so=$('#nu-school'); var opts=allSchools().map(function(s){return '<option>'+esc(s)+'</option>';}).join('');
+  if(so._h!==opts){ so._h=opts; so.innerHTML=opts; }
+  var roleSel=$('#nu-role');
+  roleSel.onchange = function(){ $('#nu-school-wrap').style.display = roleSel.value==='staff' ? '' : 'none'; };
+  roleSel.onchange();
+  $('#add-school').onclick = async function(){
+    var inp=$('#new-school'), v=inp.value.trim(); if(!v) return;
+    try{ var d=await api('POST','/api/schools',{name:v}); S.schools=d.schools; inp.value=''; toast('School added'); render(); }
+    catch(e){ toast(e.message,true); }
+  };
+  $('#nu-submit').onclick = async function(){
+    var err=$('#nu-err'); err.textContent='';
+    var name=$('#nu-name').value.trim(), email=$('#nu-email').value.trim(), pass=$('#nu-pass').value, role=roleSel.value, school=$('#nu-school').value;
+    if(!name){ err.textContent='Enter a name.'; return; }
+    if(!email){ err.textContent='Enter an email.'; return; }
+    if(!pass||pass.length<8){ err.textContent='Set a temporary password of at least 8 characters.'; return; }
+    this.disabled=true;
+    try{
+      var d=await api('POST','/api/users',{name:name,email:email,password:pass,role:role,school:school});
+      if(d.note) toast(d.note); else toast('Account created');
+      $('#nu-name').value=''; $('#nu-email').value=''; $('#nu-pass').value='';
+      await loadUsers(); render();
+    }catch(e){ err.textContent=e.message; }
+    finally{ this.disabled=false; }
+  };
+}
+
+document.addEventListener('input', function(e){ if(e.target.id==='q'){ S.q=e.target.value.trim(); render(); } });
+
+checkSession();
+})();
+</script>
+</body>
+</html>

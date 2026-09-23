@@ -1,0 +1,16 @@
+{
+  "name": "crossing-thresholds-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone tech issue tracker with its own email/password accounts and JSON-file database. No claude.ai dependency.",
+  "main": "server.js",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6"
+  }
+}
